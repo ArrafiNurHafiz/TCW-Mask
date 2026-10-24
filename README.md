@@ -153,7 +153,8 @@ systemscurity/
 ├── Cargo.toml                 # Strict dependency manifest (subtle, zeroize, curve25519)
 ├── README.md                  # Comprehensive technical documentation & rubric mapping
 ├── docs/
-│   └── report.tex             # Publication-grade IEEE LaTeX report (15–25 pages)
+│   ├── report.tex             # Publication-grade IEEE LaTeX report (15–25 pages)
+│   └── report.pdf             # Compiled publication-grade PDF report
 ├── examples/
 │   └── demo.sh                # Executable end-to-end demonstration script
 ├── benches/
