@@ -64,11 +64,9 @@ In this work, we present \textbf{TCW-Mask}, an original construction designed fr
 \begin{itemize}
     \item \textbf{Novel Algebraic Synthesis:} We combine Shamir polynomial thresholding over $\mathbb{F}_{2^{255}-19}$ with a randomized $4 \times 4$ Vandermonde matrix transformation $\mathbf{m}_i = \mathbf{V}\mathbf{s}_i + r_i \mathbf{1} \pmod p$, establishing an algebraic duality between Vandermonde matrix inversion and Lagrange basis polynomial generation.
     \item \textbf{Active Tamper Resistance via Pedersen Vector Commitments:} We bind each masked share vector to multi-limb Pedersen commitments over the prime-order Ristretto255 group. This provides unconditional hiding (preserving threshold information-theoretic secrecy) and computational binding, ensuring 100\% detection of malicious dealer manipulation or storage tampering prior to secret reconstruction.
-    \item \textbf{Provably Branchless Constant-Time Architecture:} Every stage of field arithmetic, Vandermonde inversion, and Lagrange interpolation is implemented in Rust using constant-time conditional selections (`subtle`), eliminating all secret-dependent jumps and memory indexing.
-    \item \textbf{Rigorous Empirical & Statistical Validation:} We validate the system through 1,000 end-to-end correctness cycles, simulated malicious perturbation attacks, and rigorous Test Vector Leakage Assessment (TVLA) with Welch's $t$-test confirming $|t| < 4.5$ ($p > 0.05$).
+    \item \textbf{Provably Branchless Constant-Time Architecture:} Every stage of field arithmetic, Vandermonde inversion, and Lagrange interpolation is implemented in Rust using constant-time conditional selections (\texttt{subtle}), eliminating all secret-dependent jumps and memory indexing.
+    \item \textbf{Rigorous Empirical \& Statistical Validation:} We validate the system through 1,000 end-to-end correctness cycles, simulated malicious perturbation attacks, and rigorous Test Vector Leakage Assessment (TVLA) with Welch's $t$-test confirming $|t| < 4.5$ ($p > 0.05$).
 \end{itemize}
-
----
 
 \section{Mathematical Foundations}
 
@@ -134,8 +132,6 @@ A Pedersen commitment to value $v \in \mathbb{F}_q$ with blinding scalar $r \in 
 C = v \cdot G + r \cdot H \in \mathbb{G}
 \end{equation}
 Pedersen commitments are \textbf{unconditionally hiding} (for any commitment $C$ and value $v$, there exists a unique $r$ such that $C = vG + rH$) and \textbf{computationally binding} under the hardness of the Discrete Logarithm problem in $\mathbb{G}$.
-
----
 
 \section{The TCW-Mask Construction}
 
@@ -222,8 +218,6 @@ The TCW-Mask protocol comprises two primary operational phases: \textbf{Wrap (Sp
 \end{algorithmic}
 \end{algorithm}
 
----
-
 \section{Rigorous Cryptoanalysis}
 
 \subsection{Information-Theoretic Threshold Secrecy}
@@ -267,30 +261,28 @@ For every raw share scalar $s_i$, the intermediate masked state $\mathbf{m}_i = 
 \end{securityproperty}
 Because $r_i$ and the blinding terms $b_{i, 1}, b_{i, 2}, b_{i, 3}$ are sampled uniformly at random from $\mathbb{F}_p$, every individual component $m_{i, j}$ is uniformly distributed across $\mathbb{F}_p$, independent of $s_i$. Consequently, the first-order covariance $\text{Cov}(\mathcal{HW}(m_{i, j}), s_i) = 0$, thwarting standard Correlation Power Analysis (CPA).
 
-\subsection{Comprehensive Vulnerability & Mitigation Matrix}
+\subsection{Comprehensive Vulnerability \& Mitigation Matrix}
 Table~\ref{tab:vuln_matrix} summarizes the ten core security vulnerabilities (V1--V10) analyzed in the TCW-Mask specification alongside their mathematical mitigations and verification methods.
 
 \begin{table*}[!t]
 \centering
-\caption{TCW-Mask Vulnerability Mitigation & Verification Matrix (V1--V10)}
+\caption{TCW-Mask Vulnerability Mitigation \& Verification Matrix (V1--V10)}
 \label{tab:vuln_matrix}
 \begin{tabular}{@{}llllp{5cm}@{}}
 \toprule
 \textbf{ID} & \textbf{Vulnerability Class} & \textbf{Attack Vector} & \textbf{Mathematical / Architectural Mitigation} & \textbf{Empirical Verification} \\ \midrule
-V1 & Timing Attack & Branching in Lagrange interp. & Branchless conditional selection (`subtle::CondSelect`) & TVLA Welch's $t$-test ($|t| < 4.5, p > 0.05$) \\
+V1 & Timing Attack & Branching in Lagrange interp. & Branchless conditional selection (\texttt{subtle::CondSelect}) & TVLA Welch's $t$-test ($|t| < 4.5, p > 0.05$) \\
 V2 & Power Analysis (DPA) & Intermediate share leakage & Random Vandermonde $\mathbf{V}$ + additive scalar mask $r_i$ & Chi-square uniform distribution test \\
 V3 & SPoF / Storage Compromise & Master key stolen from host & $(k, n)$-threshold Shamir polynomial over $\mathbb{F}_p$ & Shannon Secrecy proof; $k-1$ shares fail \\
 V4 & Malicious Dealer & Fraudulent share distribution & Multi-component Ristretto255 Pedersen commitment & 100\% mathematical rejection before unmask \\
 V5 & Share Tampering & File bit-flip in storage & Homomorphic check: $C_{i,j} \stackrel{?}{=} m_{i,j}G + r_i H$ & 100\% detection in test suite \\
-V6 & Memory Dump / Remanence & Plaintext key residual in RAM & `Secret<T>` wrapper enforcing `ZeroizeOnDrop` & Compiler audit + zeroization verification \\
-V7 & Polynomial Reuse & Multi-split correlation & Fresh CSPRNG entropy (`OsRng`) per split invocation & Session determinism test suite \\
+V6 & Memory Dump / Remanence & Plaintext key residual in RAM & \texttt{Secret$<$T$>$} wrapper enforcing \texttt{ZeroizeOnDrop} & Compiler audit + zeroization verification \\
+V7 & Polynomial Reuse & Multi-split correlation & Fresh CSPRNG entropy (\texttt{OsRng}) per split invocation & Session determinism test suite \\
 V8 & Small Subgroup Confinement & Curve twist / order attack & Decaf/Ristretto group cofactor elimination ($h=1$) & Subgroup confinement immunity \\
-V9 & Cross-Session Replay & Splicing shares from splits & Cryptographic 128-bit `session_id` binding & Automated replay attack detection test \\
+V9 & Cross-Session Replay & Splicing shares from splits & Cryptographic 128-bit \texttt{session\_id} binding & Automated replay attack detection test \\
 V10 & Cache-Timing & Secret-dependent indexing & Fixed-size 4-limb structures, no table lookups & Cache line invariant assembly review \\ \bottomrule
 \end{tabular}
 \end{table*}
-
----
 
 \section{Distinction from Existing Constructions}
 TCW-Mask is strictly distinguished from standard pre-made primitives:
@@ -301,8 +293,6 @@ TCW-Mask is strictly distinguished from standard pre-made primitives:
     \item \textbf{Original Mathematical Synthesis:} The integration of Vandermonde matrix masking with closed-form Lagrange polynomial matrix inversion represents an original construction not previously present in literature.
 \end{itemize}
 
----
-
 \section{Implementation Architecture}
 
 The system is implemented in pure, safe Rust (2021 Edition) adhering to zero-allocation cryptographic principles.
@@ -312,10 +302,10 @@ The system is implemented in pure, safe Rust (2021 Edition) adhering to zero-all
 \begin{tikzpicture}[
     layer/.style={rectangle, draw=black, thick, fill=gray!10, text width=7.5cm, align=left, minimum height=0.8cm, rounded corners}
 ]
-    \node[layer] (cli) {\textbf{Application Layer:} CLI (`clap`), AttackSim, Bench};
-    \node[layer, below=0.3cm of cli] (bundle) {\textbf{Protocol Layer:} `ShareBundle`, JSON Serde, Session Binding};
-    \node[layer, below=0.3cm of bundle] (crypto) {\textbf{Cryptographic Primitives:} Shamir (`sharing`), Vandermonde (`masking`), Pedersen (`commitment`)};
-    \node[layer, below=0.3cm of crypto] (field) {\textbf{Algebraic Core:} Constant-time $\mathbb{F}_{2^{255}-19}$, `subtle`, `zeroize`};
+    \node[layer] (cli) {\textbf{Application Layer:} CLI (\texttt{clap}), AttackSim, Bench};
+    \node[layer, below=0.3cm of cli] (bundle) {\textbf{Protocol Layer:} \texttt{ShareBundle}, JSON Serde, Session Binding};
+    \node[layer, below=0.3cm of bundle] (crypto) {\textbf{Cryptographic Primitives:} Shamir, Vandermonde, Pedersen};
+    \node[layer, below=0.3cm of crypto] (field) {\textbf{Algebraic Core:} Constant-time $\mathbb{F}_{2^{255}-19}$, \texttt{subtle}, \texttt{zeroize}};
 
     \draw[-{Stealth}] (cli) -- (bundle);
     \draw[-{Stealth}] (bundle) -- (crypto);
@@ -325,11 +315,9 @@ The system is implemented in pure, safe Rust (2021 Edition) adhering to zero-all
 \label{fig:software_architecture}
 \end{figure}
 
----
-
 \section{Empirical Evaluation}
 
-\subsection{Correctness & Security Evaluation}
+\subsection{Correctness \& Security Evaluation}
 The implementation was validated using automated end-to-end integration test harnesses:
 \begin{itemize}
     \item \textbf{End-to-End Correctness:} 1,000 randomized split-mask-commit-verify-unmask-reconstruct loops executed in release mode completed in 7.69 seconds (7.69 ms/cycle) with 100\% bit-level equality $M' = M$.
@@ -368,8 +356,6 @@ Significance Threshold & $|t| < 4.50$ ($p > 0.05$) \\
 \end{table}
 
 As shown in Table~\ref{tab:tvla_results}, the observed $t$-score of $-0.5196$ is well within the $|t| < 4.5$ boundary, demonstrating timing uniformity independent of secret hamming weight.
-
----
 
 \section{Conclusion and Future Work}
 We have introduced TCW-Mask, an original threshold cryptographic wrapping construction uniting finite field arithmetic over $\mathbb{F}_{2^{255}-19}$, randomized Vandermonde algebraic masking, Ristretto255 Pedersen vector commitments, and branchless constant-time execution. Formal cryptoanalysis and empirical evaluation demonstrate that TCW-Mask provides unconditional threshold privacy, robust tamper rejection ($1 - 2^{-252}$), and empirical side-channel immunity. Future extensions will examine multi-party computation (MPC) unmasking protocols and hardware acceleration on RISC-V cryptographic vector extensions.
