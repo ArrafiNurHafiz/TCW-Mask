@@ -83,7 +83,9 @@ impl FieldElement {
         let mut diff = [0u64; 4];
         let mut borrow = 0u128;
         for i in 0..4 {
-            let res = (limbs[i] as u128).wrapping_sub(P_LIMBS[i] as u128).wrapping_sub(borrow);
+            let res = (limbs[i] as u128)
+                .wrapping_sub(P_LIMBS[i] as u128)
+                .wrapping_sub(borrow);
             diff[i] = res as u64;
             borrow = (res >> 127) & 1;
         }
@@ -122,7 +124,9 @@ impl FieldElement {
         let mut diff = [0u64; 4];
         let mut borrow = 0u128;
         for i in 0..4 {
-            let res = (self.0[i] as u128).wrapping_sub(other.0[i] as u128).wrapping_sub(borrow);
+            let res = (self.0[i] as u128)
+                .wrapping_sub(other.0[i] as u128)
+                .wrapping_sub(borrow);
             diff[i] = res as u64;
             borrow = (res >> 127) & 1;
         }
@@ -147,9 +151,8 @@ impl FieldElement {
         for i in 0..4 {
             let mut carry = 0u128;
             for j in 0..4 {
-                let prod = (self.0[i] as u128) * (other.0[j] as u128)
-                    + (res[i + j] as u128)
-                    + carry;
+                let prod =
+                    (self.0[i] as u128) * (other.0[j] as u128) + (res[i + j] as u128) + carry;
                 res[i + j] = prod as u64;
                 carry = prod >> 64;
             }
@@ -163,12 +166,7 @@ impl FieldElement {
         }
 
         let bit255 = (res[3] >> 63) & 1;
-        let mut r = [
-            res[0],
-            res[1],
-            res[2],
-            res[3] & 0x7FFF_FFFF_FFFF_FFFF,
-        ];
+        let mut r = [res[0], res[1], res[2], res[3] & 0x7FFF_FFFF_FFFF_FFFF];
 
         let mut carry = (bit255 as u128) * 19;
         for i in 0..4 {

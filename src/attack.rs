@@ -20,7 +20,10 @@ pub fn simulate_attack(bundles: &[ShareBundle], mode: AttackMode) -> AttackResul
     match mode {
         AttackMode::Tamper => {
             if bundles.is_empty() {
-                return AttackResult { detected: false, message: "No bundles provided".into() };
+                return AttackResult {
+                    detected: false,
+                    message: "No bundles provided".into(),
+                };
             }
             let mut tampered = bundles[0].clone();
             // Flip the last character of the first masked vector element
@@ -42,17 +45,29 @@ pub fn simulate_attack(bundles: &[ShareBundle], mode: AttackMode) -> AttackResul
             }
         }
         AttackMode::Insufficient => {
-            let k = if !bundles.is_empty() { bundles[0].threshold as usize } else { 3 };
+            let k = if !bundles.is_empty() {
+                bundles[0].threshold as usize
+            } else {
+                3
+            };
             let count = if k > 1 { k - 1 } else { 1 };
             if bundles.len() < count {
-                return AttackResult { detected: true, message: "Less than k-1 bundles available".into() };
+                return AttackResult {
+                    detected: true,
+                    message: "Less than k-1 bundles available".into(),
+                };
             }
             let slice = &bundles[..count];
             let mut raw_shares = Vec::new();
             for b in slice {
                 match b.extract_raw_share(&gens) {
                     Ok(s) => raw_shares.push(s),
-                    Err(e) => return AttackResult { detected: true, message: e },
+                    Err(e) => {
+                        return AttackResult {
+                            detected: true,
+                            message: e,
+                        }
+                    }
                 }
             }
             match reconstruct_secret(&raw_shares, k) {
@@ -62,13 +77,17 @@ pub fn simulate_attack(bundles: &[ShareBundle], mode: AttackMode) -> AttackResul
                 },
                 Ok(_) => AttackResult {
                     detected: false,
-                    message: "Reconstructed secret with insufficient shares! Security violation!".into(),
+                    message: "Reconstructed secret with insufficient shares! Security violation!"
+                        .into(),
                 },
             }
         }
         AttackMode::Replay => {
             if bundles.len() < 2 {
-                return AttackResult { detected: false, message: "Need at least 2 bundles".into() };
+                return AttackResult {
+                    detected: false,
+                    message: "Need at least 2 bundles".into(),
+                };
             }
             let mut mixed = bundles.to_vec();
             mixed[1].session_id = "replay_attacker_fake_session_id".into();
@@ -78,7 +97,8 @@ pub fn simulate_attack(bundles: &[ShareBundle], mode: AttackMode) -> AttackResul
             if mismatch {
                 AttackResult {
                     detected: true,
-                    message: "Replay attack detected: mismatched session IDs between share bundles".into(),
+                    message: "Replay attack detected: mismatched session IDs between share bundles"
+                        .into(),
                 }
             } else {
                 AttackResult {
@@ -101,9 +121,18 @@ mod tests {
     fn test_simulate_attacks() {
         let mut rng = OsRng;
         let gens = PedersenGenerators::default();
-        let share1 = RawShare { x: FieldElement::from_u64(1), y: FieldElement::from_u64(111) };
-        let share2 = RawShare { x: FieldElement::from_u64(2), y: FieldElement::from_u64(222) };
-        let share3 = RawShare { x: FieldElement::from_u64(3), y: FieldElement::from_u64(333) };
+        let share1 = RawShare {
+            x: FieldElement::from_u64(1),
+            y: FieldElement::from_u64(111),
+        };
+        let share2 = RawShare {
+            x: FieldElement::from_u64(2),
+            y: FieldElement::from_u64(222),
+        };
+        let share3 = RawShare {
+            x: FieldElement::from_u64(3),
+            y: FieldElement::from_u64(333),
+        };
 
         let b1 = ShareBundle::create(&share1, 1, 3, 5, "session_test", &gens, &mut rng);
         let b2 = ShareBundle::create(&share2, 2, 3, 5, "session_test", &gens, &mut rng);

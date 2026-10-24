@@ -39,6 +39,9 @@ mod tests {
         let mut rng = OsRng;
         let secret = FieldElement::from_u64(0xDEADBEEF);
         let poly = Polynomial::random(secret, 3, &mut rng);
-        assert_eq!(poly.evaluate(FieldElement::ZERO).canonical(), secret.canonical());
+        assert_eq!(
+            poly.evaluate(FieldElement::ZERO).canonical(),
+            secret.canonical()
+        );
     }
 }

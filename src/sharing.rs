@@ -30,7 +30,11 @@ pub fn split_secret<R: RngCore>(
 
 pub fn reconstruct_secret(shares: &[RawShare], k: usize) -> Result<Secret<FieldElement>, String> {
     if shares.len() < k {
-        return Err(format!("Insufficient shares: got {}, required {}", shares.len(), k));
+        return Err(format!(
+            "Insufficient shares: got {}, required {}",
+            shares.len(),
+            k
+        ));
     }
     let subset = &shares[..k];
     let mut secret = FieldElement::ZERO;

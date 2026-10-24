@@ -1,3 +1,5 @@
+#![allow(clippy::needless_range_loop, clippy::manual_memcpy)]
+
 pub mod attack;
 pub mod bench;
 pub mod bundle;

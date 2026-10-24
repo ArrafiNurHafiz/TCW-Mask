@@ -60,7 +60,10 @@ impl ShareBundle {
     }
 
     pub fn verify_integrity(&self, gens: &PedersenGenerators) -> Result<(), String> {
-        if self.masked_vector.len() != 4 || self.alpha_nodes.len() != 4 || self.commitments.len() != 4 {
+        if self.masked_vector.len() != 4
+            || self.alpha_nodes.len() != 4
+            || self.commitments.len() != 4
+        {
             return Err("Invalid bundle component lengths".to_string());
         }
 
@@ -76,11 +79,15 @@ impl ShareBundle {
             if c_bytes.len() != 32 {
                 return Err("Commitment point must be 32 bytes".to_string());
             }
-            expected_comms[i] = CompressedRistretto::from_slice(&c_bytes).map_err(|e| e.to_string())?;
+            expected_comms[i] =
+                CompressedRistretto::from_slice(&c_bytes).map_err(|e| e.to_string())?;
         }
 
         if !verify_vector(gens, &masked, &r, &expected_comms) {
-            return Err(format!("Commitment verification failed for share {}", self.index));
+            return Err(format!(
+                "Commitment verification failed for share {}",
+                self.index
+            ));
         }
 
         Ok(())

@@ -25,7 +25,11 @@ pub fn calculate_t_score(a: &[f64], b: &[f64]) -> (f64, f64, f64, f64, f64) {
     let std_b = var_b.sqrt();
 
     let denom = ((var_a / n_a) + (var_b / n_b)).sqrt();
-    let t = if denom > 0.0 { (mean_a - mean_b) / denom } else { 0.0 };
+    let t = if denom > 0.0 {
+        (mean_a - mean_b) / denom
+    } else {
+        0.0
+    };
 
     (mean_a, mean_b, std_a, std_b, t)
 }

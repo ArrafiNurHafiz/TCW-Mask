@@ -36,7 +36,8 @@ fn main() {
                 key.trim().to_string()
             };
             let master_fe = FieldElement::from_hex(&key_str).expect("Invalid master key hex");
-            let raw_shares = split_secret(master_fe, k, n, &mut rng).expect("Failed to split secret");
+            let raw_shares =
+                split_secret(master_fe, k, n, &mut rng).expect("Failed to split secret");
 
             fs::create_dir_all(&out_dir).expect("Failed to create out directory");
             let mut session_bytes = [0u8; 16];
@@ -45,18 +46,34 @@ fn main() {
 
             for (idx, share) in raw_shares.iter().enumerate() {
                 let share_idx = (idx + 1) as u32;
-                let bundle = ShareBundle::create(share, share_idx, k as u32, n as u32, &session_id, &gens, &mut rng);
+                let bundle = ShareBundle::create(
+                    share,
+                    share_idx,
+                    k as u32,
+                    n as u32,
+                    &session_id,
+                    &gens,
+                    &mut rng,
+                );
                 let json = serde_json::to_string_pretty(&bundle).unwrap();
                 let file_path = out_dir.join(format!("share_{}.json", share_idx));
                 fs::write(&file_path, json).expect("Failed to write share bundle");
-                println!("Exported share bundle {} to {}", share_idx, file_path.display());
+                println!(
+                    "Exported share bundle {} to {}",
+                    share_idx,
+                    file_path.display()
+                );
             }
-            println!("Split complete: {} shares generated with threshold {}.", n, k);
+            println!(
+                "Split complete: {} shares generated with threshold {}.",
+                n, k
+            );
         }
         Commands::Verify { shares } => {
             let mut all_valid = true;
             for path in &shares {
-                let content = fs::read_to_string(path).unwrap_or_else(|_| panic!("Cannot read {}", path.display()));
+                let content = fs::read_to_string(path)
+                    .unwrap_or_else(|_| panic!("Cannot read {}", path.display()));
                 let bundle: ShareBundle = serde_json::from_str(&content).expect("Invalid JSON");
                 match bundle.verify_integrity(&gens) {
                     Ok(_) => println!("[VALID] Share {} in {}", bundle.index, path.display()),
@@ -82,13 +99,17 @@ fn main() {
             let mut session_id = String::new();
 
             for path in &shares {
-                let content = fs::read_to_string(path).unwrap_or_else(|_| panic!("Cannot read {}", path.display()));
+                let content = fs::read_to_string(path)
+                    .unwrap_or_else(|_| panic!("Cannot read {}", path.display()));
                 let bundle: ShareBundle = serde_json::from_str(&content).expect("Invalid JSON");
                 if session_id.is_empty() {
                     session_id = bundle.session_id.clone();
                     k = bundle.threshold as usize;
                 } else if bundle.session_id != session_id {
-                    eprintln!("Error: Share bundle {} belongs to a different session!", path.display());
+                    eprintln!(
+                        "Error: Share bundle {} belongs to a different session!",
+                        path.display()
+                    );
                     exit(1);
                 }
 
@@ -130,21 +151,44 @@ fn main() {
             let result = simulate_attack(&bundles, attack_mode);
             println!("\n=== Attack Simulation Result ===");
             println!("Mode:     {}", mode);
-            println!("Detected: {}", if result.detected { "YES (PASSED DEFENSE)" } else { "NO (FAILED DEFENSE)" });
+            println!(
+                "Detected: {}",
+                if result.detected {
+                    "YES (PASSED DEFENSE)"
+                } else {
+                    "NO (FAILED DEFENSE)"
+                }
+            );
             println!("Details:  {}", result.message);
             if !result.detected {
                 exit(1);
             }
         }
         Commands::Bench { iterations } => {
-            println!("Running TVLA timing assessment with {} iterations...", iterations);
+            println!(
+                "Running TVLA timing assessment with {} iterations...",
+                iterations
+            );
             let res = run_tvla(iterations);
             println!("\n=== TVLA Timing Assessment ===");
-            println!("Mean Group A (Low Hamming):  {:.2} ns (std: {:.2})", res.mean_a_ns, res.std_a_ns);
-            println!("Mean Group B (High Hamming): {:.2} ns (std: {:.2})", res.mean_b_ns, res.std_b_ns);
+            println!(
+                "Mean Group A (Low Hamming):  {:.2} ns (std: {:.2})",
+                res.mean_a_ns, res.std_a_ns
+            );
+            println!(
+                "Mean Group B (High Hamming): {:.2} ns (std: {:.2})",
+                res.mean_b_ns, res.std_b_ns
+            );
             println!("Welch's t-score:             {:.4}", res.t_score);
             println!("Leakage Threshold:           |t| < 4.50 (p > 0.05)");
-            println!("Result:                      {}", if res.is_leakage_free { "PASS (CONSTANT-TIME CONFIRMED)" } else { "FAIL (POSSIBLE TIMING LEAK)" });
+            println!(
+                "Result:                      {}",
+                if res.is_leakage_free {
+                    "PASS (CONSTANT-TIME CONFIRMED)"
+                } else {
+                    "FAIL (POSSIBLE TIMING LEAK)"
+                }
+            );
         }
     }
 }

@@ -155,7 +155,11 @@ mod tests {
                 for k in 0..BLOCK_SIZE {
                     sum = sum.add(&row[k].mul(&inv[k][j]));
                 }
-                let expected = if i == j { FieldElement::ONE } else { FieldElement::ZERO };
+                let expected = if i == j {
+                    FieldElement::ONE
+                } else {
+                    FieldElement::ZERO
+                };
                 assert_eq!(sum.canonical(), expected.canonical());
             }
         }
