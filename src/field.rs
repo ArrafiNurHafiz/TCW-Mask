@@ -136,8 +136,8 @@ impl FieldElement {
         }
 
         FieldElement::conditional_select(
-            &FieldElement(sum_p),
             &FieldElement(diff),
+            &FieldElement(sum_p),
             Choice::from(borrow as u8),
         )
     }
