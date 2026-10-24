@@ -2,4 +2,6 @@ pub mod commitment;
 pub mod constant_time;
 pub mod field;
 pub mod masking;
+pub mod polynomial;
+pub mod sharing;
 pub mod zeroize_ext;
