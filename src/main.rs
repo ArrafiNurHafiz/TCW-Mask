@@ -8,7 +8,9 @@ use tcw_mask::bench::run_tvla;
 use tcw_mask::bundle::ShareBundle;
 use tcw_mask::cli::{Cli, Commands};
 use tcw_mask::commitment::PedersenGenerators;
+use tcw_mask::cpa::simulate_cpa_attack;
 use tcw_mask::field::FieldElement;
+use tcw_mask::proactive::refresh_shares;
 use tcw_mask::sharing::{reconstruct_secret, split_secret};
 
 fn main() {
@@ -187,6 +189,61 @@ fn main() {
                     "PASS (CONSTANT-TIME CONFIRMED)"
                 } else {
                     "FAIL (POSSIBLE TIMING LEAK)"
+                }
+            );
+        }
+        Commands::Refresh { shares, out_dir } => {
+            if shares.is_empty() {
+                eprintln!("No shares provided for refresh");
+                exit(1);
+            }
+            let mut bundles = Vec::new();
+            for path in &shares {
+                let content = fs::read_to_string(path)
+                    .unwrap_or_else(|_| panic!("Cannot read {}", path.display()));
+                let b: ShareBundle = serde_json::from_str(&content).expect("Invalid JSON");
+                bundles.push(b);
+            }
+            let refreshed = refresh_shares(&bundles, &gens, &mut rng).unwrap_or_else(|e| {
+                eprintln!("Refresh error: {}", e);
+                exit(1);
+            });
+            fs::create_dir_all(&out_dir).expect("Failed to create out_dir");
+            for b in &refreshed {
+                let json = serde_json::to_string_pretty(b).unwrap();
+                let file_path = out_dir.join(format!("share_{}.json", b.index));
+                fs::write(&file_path, json).expect("Failed to write refreshed share");
+                println!(
+                    "Exported refreshed share {} (session: {}) to {}",
+                    b.index,
+                    b.session_id,
+                    file_path.display()
+                );
+            }
+            println!("Proactive refresh complete: shares advanced to new epoch.");
+        }
+        Commands::CpaSim { traces } => {
+            println!(
+                "Simulating Correlation Power Analysis (CPA) attack with {} traces...",
+                traces
+            );
+            let res = simulate_cpa_attack(traces);
+            println!("\n=== Correlation Power Analysis (CPA) Assessment ===");
+            println!("Traces Simulated:            {}", res.traces);
+            println!(
+                "Unmasked Trace Correlation:  {:.4} (High Leakage: > 0.80)",
+                res.unmasked_corr
+            );
+            println!(
+                "Masked Trace Correlation:    {:.4} (Zero Leakage Target: < 0.10)",
+                res.masked_corr
+            );
+            println!(
+                "Status:                      {}",
+                if res.is_masked_effective {
+                    "PASS (VANDERMONDE MASKING EFFECTIVE)"
+                } else {
+                    "FAIL"
                 }
             );
         }

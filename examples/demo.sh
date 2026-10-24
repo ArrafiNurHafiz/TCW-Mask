@@ -43,7 +43,19 @@ $CLI attack-sim --shares "$TMP_DIR/shares"/share_*.json --mode insufficient || t
 echo "--- Replay / Mismatched Session Attack ---"
 $CLI attack-sim --shares "$TMP_DIR/shares"/share_*.json --mode replay || true
 
-echo -e "\n[6] Running TVLA Statistical Timing Bench..."
+echo -e "\n[6] Proactively Refreshing Shares to New Epoch (Zero-Polynomial Re-randomization)..."
+$CLI refresh --shares "$TMP_DIR/shares"/share_*.json --out-dir "$TMP_DIR/refreshed_shares"
+$CLI verify --shares "$TMP_DIR/refreshed_shares"/share_*.json
+$CLI reconstruct --shares "$TMP_DIR/refreshed_shares/share_2.json" "$TMP_DIR/refreshed_shares/share_3.json" "$TMP_DIR/refreshed_shares/share_4.json" --out "$TMP_DIR/refreshed_recovered.key"
+REFRESHED_REC=$(cat "$TMP_DIR/refreshed_recovered.key")
+if [ "$KEY" == "$REFRESHED_REC" ]; then
+    echo "SUCCESS: Key reconstructed from refreshed epoch shares matches original master key!"
+fi
+
+echo -e "\n[7] Simulating Correlation Power Analysis (CPA / DPA) Attack..."
+$CLI cpa-sim --traces 1000
+
+echo -e "\n[8] Running TVLA Statistical Timing Bench..."
 $CLI bench --iterations 500
 
 echo -e "\n=========================================================="

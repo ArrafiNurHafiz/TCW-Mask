@@ -100,7 +100,19 @@ diff -s master.key recovered.key
 ./target/release/tcw-mask attack-sim --shares shares/share_*.json --mode replay
 ```
 
-### 6. Run Statistical TVLA Timing Benchmark
+### 6. Proactive Share Refresh (Zero-Polynomial Re-randomization)
+```bash
+# Advance shares to a new epoch with fresh masking and commitments without changing master secret
+./target/release/tcw-mask refresh --shares shares/share_*.json --out-dir refreshed_shares/
+```
+
+### 7. Correlation Power Analysis (CPA) Attack Simulator
+```bash
+# Simulates physical side-channel power consumption: proves unmasked leaks (r > 0.85) while masked is protected (|r| < 0.10)
+./target/release/tcw-mask cpa-sim --traces 2000
+```
+
+### 8. Run Statistical TVLA Timing Benchmark
 ```bash
 ./target/release/tcw-mask bench --iterations 1000
 ```

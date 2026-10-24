@@ -55,4 +55,16 @@ pub enum Commands {
         #[arg(short, long, default_value_t = 1000)]
         iterations: usize,
     },
+    /// Proactively refresh shares to a new epoch without changing master key
+    Refresh {
+        #[arg(short, long, num_args = 1..)]
+        shares: Vec<PathBuf>,
+        #[arg(short, long)]
+        out_dir: PathBuf,
+    },
+    /// Simulate Correlation Power Analysis (CPA) attack on unmasked vs masked shares
+    CpaSim {
+        #[arg(short, long, default_value_t = 2000)]
+        traces: usize,
+    },
 }
