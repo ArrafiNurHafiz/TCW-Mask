@@ -1,3 +1,4 @@
+pub mod bundle;
 pub mod commitment;
 pub mod constant_time;
 pub mod field;
