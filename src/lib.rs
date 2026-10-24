@@ -1,6 +1,7 @@
 pub mod attack;
 pub mod bench;
 pub mod bundle;
+pub mod cli;
 pub mod commitment;
 pub mod constant_time;
 pub mod field;
